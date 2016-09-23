@@ -7,10 +7,15 @@ public class GenerateGrid : MonoBehaviour {
 
     public GameObject FieldAsset;
     public GameObject BoxAsset;
+    public GameObject CrossAsset;
+    public GameObject PlayerAsset;
+
     public static int AreaSize = 10 ;
     public int NumberOfBoxes = 3;
     public List<Color> TableOfColor = new List<Color> { Color.blue, Color.red, Color.yellow, Color.green };
-    public static Tile [,] Board;
+    public static Tile [,] TableOfTiles;
+    
+
 
     public class Tile : MonoBehaviour
     {
@@ -46,22 +51,24 @@ public class GenerateGrid : MonoBehaviour {
                 x = Random.Range(0, AreaSize);
                 y = Random.Range(0, AreaSize);
             } while (IsLocked(x, y));
-            Board[x, y].isLocked = true;
+            TableOfTiles[x, y].isLocked = true;
             return new Vector3(x,y,0);
         }
 
         static bool IsLocked(int x, int y)
         {
-            return Board[x, y].isLocked;
+            return TableOfTiles[x, y].isLocked;
         }
 
     };
 
     void Start () {
 
-        Board = new Tile[AreaSize, AreaSize];
+        TableOfTiles = new Tile[AreaSize, AreaSize];
+        Cataloges.ListOfCataloges = Cataloges.GenerateCataloges("Boxes", "Tiles", "Crosses");
         GenerateTiles();
-        GenerateBoxes();
+        GenerateBoxesAndCrosses();
+        GeneratePlayer();
 	}
 	
 	// Update is called once per frame
@@ -71,37 +78,74 @@ public class GenerateGrid : MonoBehaviour {
 
     void GenerateTiles()
     {
-        GameObject Tiles = new GameObject();
-        Tiles.name = "Tiles";
-      
         for (int i = 0; i < AreaSize; i++)
             for (int j = 0; j < AreaSize; j++)
             {
                 Tile field = new Tile(i, j, FieldAsset);
-                field.Asset.transform.parent = Tiles.transform;
-                Board[i, j] = field;
+                Cataloges.AddToCatalog("Tiles", field.Asset);
+                TableOfTiles[i, j] = field;
             }
     }
 
-    void GenerateBoxes()
+    void GenerateBoxesAndCrosses()
     {
-
-        GameObject Boxes = new GameObject();
-        Boxes.name = "Boxes";
         for(int i = 0; i< NumberOfBoxes; i++)
         {
-            
-            //RandSomeVector in scope 10
-              
-            GameObject Box = Instantiate(BoxAsset, Tile.RandomField(), Quaternion.identity) as GameObject;
-            Box.transform.parent = Boxes.transform;
 
             int IndexOfColor = Random.Range(0, TableOfColor.Count);
+
+            GameObject Box = Instantiate(BoxAsset, Tile.RandomField(), Quaternion.identity) as GameObject;
+            Cataloges.AddToCatalog("Boxes", Box);            
             Box.GetComponent<Renderer>().material.color = TableOfColor[IndexOfColor];
+
+            GameObject Cross = Instantiate(CrossAsset, Tile.RandomField(), Quaternion.Euler(90,0,0)) as GameObject;
+            Cataloges.AddToCatalog("Crosses", Cross);
+            Cross.GetComponent<Renderer>().material.color = TableOfColor[IndexOfColor];
+            
             TableOfColor.RemoveAt(IndexOfColor);
         }
     }
 
+    void GeneratePlayer()
+    {
+        GameObject Player = Instantiate(PlayerAsset, Tile.RandomField(), Quaternion.Euler(90,0,0)) as GameObject;
+    }
 
+    public class Cataloges
+    {
+        public static List<GameObject> ListOfCataloges;
+
+        public static List<GameObject> GenerateCataloges(params string[] t)
+        {
+            if(ListOfCataloges == null)
+                ListOfCataloges = new List<GameObject>();
+
+            foreach (string name in t)
+            {
+                GameObject ob = new GameObject();
+                ob.name = name;
+                ListOfCataloges.Add(ob);
+            }
+            return ListOfCataloges;
+        }
+
+        public static bool AddToCatalog(string s, GameObject GameObjectToAdd)
+        {
+            foreach(GameObject Catalog in ListOfCataloges)
+            {
+                if (Catalog.name == s)
+                {
+                    GameObjectToAdd.transform.parent = Catalog.transform;
+                    return true;
+                }
+            }
+            //if there is not catalog for that name 
+            GenerateCataloges(s);
+            GameObjectToAdd.transform.parent = ListOfCataloges[-1].transform;
+            return false;
+        }
+    };
+
+    
 
 }

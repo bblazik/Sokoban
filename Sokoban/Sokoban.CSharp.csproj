@@ -64,6 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\MyScripts\GenerateGrid.cs" />
+    <Compile Include="Assets\PlayerController.cs" />
     <Compile Include="Assets\ZSmartTile\Classes\ZST_MapManager.cs" />
     <Compile Include="Assets\ZSmartTile\Components\ZST_SmartTile.cs" />
     <Compile Include="Assets\ZSmartTile\Components\ZST_SnapToGrid.cs" />
