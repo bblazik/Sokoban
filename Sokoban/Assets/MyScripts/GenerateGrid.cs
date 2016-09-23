@@ -45,8 +45,8 @@ public class GenerateGrid : MonoBehaviour {
             {
                 x = Random.Range(0, AreaSize);
                 y = Random.Range(0, AreaSize);
-            } while (!IsLocked(x, y));
-
+            } while (IsLocked(x, y));
+            Board[x, y].isLocked = true;
             return new Vector3(x,y,0);
         }
 
@@ -54,6 +54,7 @@ public class GenerateGrid : MonoBehaviour {
         {
             return Board[x, y].isLocked;
         }
+
     };
 
     void Start () {
