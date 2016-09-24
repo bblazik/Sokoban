@@ -12,7 +12,7 @@ public class PlayerController : MonoBehaviour {
 
     void OnTriggerEnter(Collider other)
     {
-        Debug.Log("Colider pos: " + other.transform.position + "x,y" + x + "," + y);
+        //Debug.Log("Colider pos: " + other.transform.position + "x,y" + x + "," + y);
         other.transform.Translate(new Vector3(x, y, 0));
     }
 
@@ -32,8 +32,11 @@ public class PlayerController : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.W)) y = 1;
         if (Input.GetKeyDown(KeyCode.S)) y = -1;
 
-        Debug.Log("current pos: , x, z: "+ transform.position + x + "," + y);
+        //Debug.Log("current pos: , x, z: "+ transform.position + x + "," + y);
         Vector3 targetPosition = (transform.position+ new Vector3(x, y, 0));
         transform.position = Vector2.MoveTowards(transform.position, targetPosition, 10);   
-    }   
+    }
+    
+    
+       
 }

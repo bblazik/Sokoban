@@ -3,6 +3,7 @@ using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
+ 
 
 public class GenerateGrid : MonoBehaviour {
 
@@ -15,7 +16,7 @@ public class GenerateGrid : MonoBehaviour {
     public int NumberOfBoxes = 3;
     public List<Color> TableOfColor = new List<Color> { Color.blue, Color.red, Color.yellow, Color.green };
     public static Tile [,] TableOfTiles;
-    public static List<GameObject> Boxes, Crosses;
+    public static GameObject Player;
 
 
     public class Tile : MonoBehaviour
@@ -66,8 +67,6 @@ public class GenerateGrid : MonoBehaviour {
     void Start () {
 
         TableOfTiles = new Tile[AreaSize, AreaSize];
-        Boxes = new List<GameObject>();
-        Crosses = new List<GameObject>();
 
         Cataloges.ListOfCataloges = Cataloges.GenerateCataloges("Boxes", "Tiles", "Crosses");
         GenerateTiles();
@@ -100,27 +99,28 @@ public class GenerateGrid : MonoBehaviour {
             int IndexOfColor = Random.Range(0, TableOfColor.Count);
 
             GameObject Box = Instantiate(BoxAsset, Tile.RandomField(), Quaternion.identity) as GameObject;
+            Box.tag = "Box";
             Cataloges.AddToCatalog("Boxes", Box);            
             Box.GetComponent<Renderer>().material.color = TableOfColor[IndexOfColor];
-            Boxes.Add(Box); // It is not a catalog. It a List to help!
 
             GameObject Cross = Instantiate(CrossAsset, Tile.RandomField(), Quaternion.Euler(90,0,0)) as GameObject;
+            Cross.tag = "Cross";
             Cataloges.AddToCatalog("Crosses", Cross);
             Cross.GetComponent<Renderer>().material.color = TableOfColor[IndexOfColor];
-            Crosses.Add(Cross); // It is not a catalog. It a List to help!
-
             TableOfColor.RemoveAt(IndexOfColor);
         }
     }
 
     void GeneratePlayer()
     {
-        GameObject Player = Instantiate(PlayerAsset, Tile.RandomField(), Quaternion.Euler(90,0,0)) as GameObject;
+        Player = Instantiate(PlayerAsset, Tile.RandomField(), Quaternion.Euler(90,0,0)) as GameObject;
     }
 
     bool GameIsOver()
     {
-        for(int i = 0; i <Boxes.Count; i++)
+        GameObject[] Boxes = GameObject.FindGameObjectsWithTag("Box");
+        GameObject[] Crosses = GameObject.FindGameObjectsWithTag("Cross");
+        for (int i = 0; i <Boxes.Length; i++)
         {
             if (Boxes[i].transform.position != Crosses[i].transform.position) return false;
         }
@@ -130,7 +130,7 @@ public class GenerateGrid : MonoBehaviour {
     public class Cataloges
     {
         public static List<GameObject> ListOfCataloges;
-
+        
         public static List<GameObject> GenerateCataloges(params string[] t)
         {
             if(ListOfCataloges == null)
