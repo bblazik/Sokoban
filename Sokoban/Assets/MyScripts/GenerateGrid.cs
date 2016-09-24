@@ -2,6 +2,7 @@
 using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class GenerateGrid : MonoBehaviour {
 
@@ -14,7 +15,7 @@ public class GenerateGrid : MonoBehaviour {
     public int NumberOfBoxes = 3;
     public List<Color> TableOfColor = new List<Color> { Color.blue, Color.red, Color.yellow, Color.green };
     public static Tile [,] TableOfTiles;
-    
+    public static List<GameObject> Boxes, Crosses;
 
 
     public class Tile : MonoBehaviour
@@ -48,8 +49,8 @@ public class GenerateGrid : MonoBehaviour {
             int x, y;
             do
             {
-                x = Random.Range(0, AreaSize);
-                y = Random.Range(0, AreaSize);
+                x = Random.Range(1, AreaSize -1);
+                y = Random.Range(1, AreaSize -1);
             } while (IsLocked(x, y));
             TableOfTiles[x, y].isLocked = true;
             return new Vector3(x,y,0);
@@ -65,16 +66,20 @@ public class GenerateGrid : MonoBehaviour {
     void Start () {
 
         TableOfTiles = new Tile[AreaSize, AreaSize];
+        Boxes = new List<GameObject>();
+        Crosses = new List<GameObject>();
+
         Cataloges.ListOfCataloges = Cataloges.GenerateCataloges("Boxes", "Tiles", "Crosses");
         GenerateTiles();
         GenerateBoxesAndCrosses();
         GeneratePlayer();
 	}
 	
-	// Update is called once per frame
+
 	void Update () {
-	
-	}
+        if(GameIsOver())
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
 
     void GenerateTiles()
     {
@@ -97,11 +102,13 @@ public class GenerateGrid : MonoBehaviour {
             GameObject Box = Instantiate(BoxAsset, Tile.RandomField(), Quaternion.identity) as GameObject;
             Cataloges.AddToCatalog("Boxes", Box);            
             Box.GetComponent<Renderer>().material.color = TableOfColor[IndexOfColor];
+            Boxes.Add(Box); // It is not a catalog. It a List to help!
 
             GameObject Cross = Instantiate(CrossAsset, Tile.RandomField(), Quaternion.Euler(90,0,0)) as GameObject;
             Cataloges.AddToCatalog("Crosses", Cross);
             Cross.GetComponent<Renderer>().material.color = TableOfColor[IndexOfColor];
-            
+            Crosses.Add(Cross); // It is not a catalog. It a List to help!
+
             TableOfColor.RemoveAt(IndexOfColor);
         }
     }
@@ -109,6 +116,15 @@ public class GenerateGrid : MonoBehaviour {
     void GeneratePlayer()
     {
         GameObject Player = Instantiate(PlayerAsset, Tile.RandomField(), Quaternion.Euler(90,0,0)) as GameObject;
+    }
+
+    bool GameIsOver()
+    {
+        for(int i = 0; i <Boxes.Count; i++)
+        {
+            if (Boxes[i].transform.position != Crosses[i].transform.position) return false;
+        }
+        return true;
     }
 
     public class Cataloges
@@ -131,6 +147,7 @@ public class GenerateGrid : MonoBehaviour {
 
         public static bool AddToCatalog(string s, GameObject GameObjectToAdd)
         {
+            if(ListOfCataloges.Count > 0)
             foreach(GameObject Catalog in ListOfCataloges)
             {
                 if (Catalog.name == s)
@@ -141,7 +158,7 @@ public class GenerateGrid : MonoBehaviour {
             }
             //if there is not catalog for that name 
             GenerateCataloges(s);
-            GameObjectToAdd.transform.parent = ListOfCataloges[-1].transform;
+            GameObjectToAdd.transform.parent = ListOfCataloges[ListOfCataloges.Count-1].transform;
             return false;
         }
     };
