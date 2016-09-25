@@ -4,11 +4,16 @@ using System.Collections;
 public class PlayerController : MonoBehaviour {
     int x = 0;
     int y = 0;
-    static int AreaSize;
+    static int AreaSize = 10;
+
+    PlayerController()
+    {
+        AreaSize = GenerateGrid.AreaSize;
+    }
 
     // Use this for initialization
     void Start () {
-        AreaSize = GenerateGrid.AreaSize;
+        //AreaSize = GenerateGrid.AreaSize;
         Debug.Log("AreaSize: " + AreaSize);
     }
 
@@ -49,14 +54,13 @@ public class PlayerController : MonoBehaviour {
         if (ObjectOutOBound(targetPos)) return false;
         
         //Box: outofbound, secondbox.
-        Vector3 positionToCheck = targetPos + (targetPos - currentPos);
-        //Debug.Log("positionToCheck: " + positionToCheck);
-        if ((BoxAtPos(Boxes, targetPos) || BoxAtPos(Boxes, positionToCheck))
-            && ObjectOutOBound(positionToCheck)) return false;
+        Vector3 positionBehindBox = targetPos + (targetPos - currentPos);
+        if ((BoxAtPos(Boxes, targetPos) && BoxAtPos(Boxes, positionBehindBox))
+            || BoxAtPos(Boxes, targetPos) && ObjectOutOBound(positionBehindBox)) return false;
             
         return true;
     }
-    static bool ObjectOutOBound(Vector3 targetPos)
+    public static bool ObjectOutOBound(Vector3 targetPos)
     {
         if (targetPos.x >= 0 && targetPos.x <AreaSize && targetPos.y >= 0 && targetPos.y < AreaSize)
             return false;

@@ -6,107 +6,131 @@ using System;
 
 public class AI : MonoBehaviour {
 
-    public GameObject [] Boxes, Crosses;
-    GameObject Player;
+    public Graph<VirtualState> states;
+    VirtualState InitialState;
+    int limit = 4;
 
-	// Use this for initialization
-	void Start () {
-	}
+    // Use this for initialization
+    void Start () {
+        states = new Graph<VirtualState>();
+        InitialState = new VirtualState(
+            GameObject.FindGameObjectsWithTag("Box"),
+            GameObject.FindGameObjectsWithTag("Cross"),
+            GameObject.FindGameObjectWithTag("Player"),
+            new Vector3(0, 0, 0)
+        );
+        
+        states.AddNode(InitialState);
+        CreateSearchTree(InitialState, 1);
+    }
 	
 	// Update is called once per frame
 	void Update () {
 
 	}
 
-
-
-
-    void GeneratePossibleMoves()
+    void CreateSearchTree(VirtualState state, int n)
     {
-        Graph<VirtualState> states = new Graph<VirtualState>();
-    }
-    void GenerateStates()
-    {
-        Graph<VirtualState> states = new Graph<VirtualState>();
+        List<VirtualState> PossibleStates = GeneratePossibleStates(state);
 
-        VirtualState InitialState = new VirtualState(
-            GameObject.FindGameObjectsWithTag("Box"),
-            GameObject.FindGameObjectsWithTag("Cross"),
-            GameObject.FindGameObjectWithTag("Player")
-        );
-        states.AddNode(InitialState);
+        foreach (VirtualState v in PossibleStates) {
+            states.AddNode(v);
+            
+            //states.AddUndirectedEdge(new GraphNode<VirtualState>(v),
+            //                       (Gra)InitialState,
+            //                       (int)(state.EvaluationValue - v.EvaluationValue)
+            //                       );
+            if(n  < limit)
+                CreateSearchTree(v, n + 1);
+        }
+
+        Debug.Log("Nodes: " + states.Count);
+
+        
     }
 
-    List<VirtualState> GeneratePossibleStates(VirtualState state)
+    static List<VirtualState> GeneratePossibleStates(VirtualState state)
     {
         List<VirtualState> newStates = new List<VirtualState>();
         //Possible movement of player, and possible change of box pos
         GameObject Player = state.Player;
         GameObject[] Boxes = state.Boxes;
 
-        foreach(Vector3 move in possibleMoves(state)) {
+        List<Vector3> listOfPossibleMoves = possibleMoves(state);
+        foreach (Vector3 move in listOfPossibleMoves) {
 
             //If Box at move position change box position
             if (PlayerController.BoxAtPos(Boxes, Player.transform.position + move))
                 Boxes[PlayerController.iBoxAtPos(Boxes, Player.transform.position + move)].transform.Translate(move);
 
             newStates.Add(new VirtualState(
-            Boxes,
-            state.Crosses,
-            Player));
+                Boxes,
+                state.Crosses,
+                Player,
+                move)
+            );
         }
 
         return newStates;
-
     }
-    List<Vector3> possibleMoves(VirtualState state)
+    static List<Vector3> possibleMoves(VirtualState state)
     {
         List<Vector3> possibleMoves = new List<Vector3>();
 
-        if(PlayerController.MoveIsPossible(
+        Vector3 v = state.Player.transform.position + new Vector3(1, 0, 0);
+        if (PlayerController.MoveIsPossible(
             state.Player.transform.position,
-            state.Player.transform.position + new Vector3 (1,0,0),
+            v,
             state.Boxes))
         {
             possibleMoves.Add(new Vector3(1, 0, 0));
         }
+
+
+        v = state.Player.transform.position + new Vector3(-1, 0, 0);
         if (PlayerController.MoveIsPossible(
             state.Player.transform.position,
-            state.Player.transform.position + new Vector3(-1, 0, 0),
+            v,
             state.Boxes))
         {
             possibleMoves.Add(new Vector3(-1, 0, 0));
         }
+        v = state.Player.transform.position + new Vector3(0, 1, 0);
         if (PlayerController.MoveIsPossible(
             state.Player.transform.position,
-            state.Player.transform.position + new Vector3(0, 1, 0),
+            v,
             state.Boxes))
         {
             possibleMoves.Add(new Vector3(0, 1, 0));
         }
+        v = state.Player.transform.position + new Vector3(0, -1, 0);
         if (PlayerController.MoveIsPossible(
             state.Player.transform.position,
-            state.Player.transform.position + new Vector3(0, -1, 0),
+            v,
             state.Boxes))
         {
             possibleMoves.Add(new Vector3(0, -1, 0));
         }
+
+        if (possibleMoves.Count ==0) throw new System.ArgumentException("There are not possible moves");
         return possibleMoves;
     }
 
 }
 
-class VirtualState
+public class VirtualState
 {
     public GameObject[] Boxes, Crosses;
     public GameObject Player;
-    float EvaluationValue;
+    public float EvaluationValue;
+    Vector3 move;
 
-    public VirtualState(GameObject[]Boxes, GameObject[] Crosses, GameObject Player)
+    public VirtualState(GameObject[]Boxes, GameObject[] Crosses, GameObject Player, Vector3 move)
     {
         this.Boxes = Boxes;
         this.Crosses = Crosses;
         this.Player = Player;
+        this.move = move;
 
         EvaluationValue = EvaluationFuction(Boxes, Crosses, Player);
     }
@@ -134,7 +158,20 @@ class VirtualState
     }
 }
 
-/*Help classes*/
+/*Help classes - Graph don't like me */
+/*
+public class Tree<T>
+{   
+    List<T> Nodes;
+}
+public class Node <T>
+{
+    T Parent;
+
+    VirtualState v;
+}
+*/
+
 
 public class Node<T>
 {
@@ -231,6 +268,7 @@ public class GraphNode<T> : Node<T>
 }
 
 public class Graph<T> : IEnumerable<T>
+
 {
     private NodeList<T> nodeSet;
 
@@ -260,6 +298,7 @@ public class Graph<T> : IEnumerable<T>
         from.Neighbors.Add(to);
         from.Costs.Add(cost);
     }
+
 
     public void AddUndirectedEdge(GraphNode<T> from, GraphNode<T> to, int cost)
     {
@@ -324,3 +363,4 @@ public class Graph<T> : IEnumerable<T>
         get { return nodeSet.Count; }
     }
 }
+
