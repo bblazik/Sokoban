@@ -6,74 +6,117 @@ using System;
 
 public class AI : MonoBehaviour {
 
-    public Graph<VirtualState> states;
     VirtualState InitialState;
-    int limit = 4;
+    int limit =3;
 
     // Use this for initialization
     void Start () {
-        states = new Graph<VirtualState>();
-        InitialState = new VirtualState(
-            GameObject.FindGameObjectsWithTag("Box"),
-            GameObject.FindGameObjectsWithTag("Cross"),
-            GameObject.FindGameObjectWithTag("Player"),
-            new Vector3(0, 0, 0)
-        );
-        
-        states.AddNode(InitialState);
-        CreateSearchTree(InitialState, 1);
+        InitialState = getCurrentState();       
     }
 	
 	// Update is called once per frame
 	void Update () {
 
-	}
-
-    void CreateSearchTree(VirtualState state, int n)
-    {
-        List<VirtualState> PossibleStates = GeneratePossibleStates(state);
-
-        foreach (VirtualState v in PossibleStates) {
-            states.AddNode(v);
-            
-            //states.AddUndirectedEdge(new GraphNode<VirtualState>(v),
-            //                       (Gra)InitialState,
-            //                       (int)(state.EvaluationValue - v.EvaluationValue)
-            //                       );
-            if(n  < limit)
-                CreateSearchTree(v, n + 1);
-        }
-
-        Debug.Log("Nodes: " + states.Count);
-
-        
+        //Debug.Log("Size: " + m.Count);
+        //foreach(Vector3 v in m) { AIMove(v); }
+        //InvokeRepeating("AIMove(m[0])", 2, 2);
+        AIMove();
     }
 
-    static List<VirtualState> GeneratePossibleStates(VirtualState state)
+    public void AIMove()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            InitialState = getCurrentState();
+
+            List<Vector3> m = (GenerateListOfMoves(InitialState, 0));
+            Debug.Log(m[0]);
+            transform.position += m[0];
+            InitialState = getCurrentState();
+        }
+            
+    }
+    VirtualState getCurrentState()
+    {
+        VirtualState CurrentState = new VirtualState(
+            GameObject.FindGameObjectsWithTag("Box"),
+            GameObject.FindGameObjectsWithTag("Cross"),
+            GameObject.FindGameObjectWithTag("Player"),
+            new Vector3(0, 0, 0)
+        );
+        Debug.Log("Initial position: " + GameObject.FindGameObjectWithTag("Player").transform.position);
+
+        return CurrentState;
+    }
+    float CreateSearchTree(VirtualState state, int n, ref List<Vector3> moves)
+    {
+        List<VirtualState> PossibleStates = GeneratePossibleStates(state);
+        VirtualState best = new VirtualState();
+        foreach (VirtualState v in PossibleStates) {
+            if (n + 1 < limit)
+            {
+                v.EvaluationValue += CreateSearchTree(v, n + 1, ref moves);
+            }
+            if (v.EvaluationValue < best.EvaluationValue)
+            {
+                best = v;
+            }
+        }
+        //Debug.Log("N: " + n + " , " + best.EvaluationValue + ", " + best.move);
+
+        if( n ==0 )
+            moves.Add(best.move);
+
+        return best.EvaluationValue; 
+    }
+    List<Vector3> GenerateListOfMoves(VirtualState state, int n)
+    {
+        List<Vector3> moves = new List<Vector3>();
+        CreateSearchTree(state, n, ref moves);
+        Debug.Log(moves[0]);
+        return moves;
+    }    
+    List<VirtualState> GeneratePossibleStates(VirtualState state)
     {
         List<VirtualState> newStates = new List<VirtualState>();
         //Possible movement of player, and possible change of box pos
-        GameObject Player = state.Player;
+        GameObject Player = Instantiate(state.Player, state.Player.transform.position, Quaternion.identity) as GameObject;
         GameObject[] Boxes = state.Boxes;
-
+        Vector3 currentPos = Player.transform.position;
+        
         List<Vector3> listOfPossibleMoves = possibleMoves(state);
         foreach (Vector3 move in listOfPossibleMoves) {
-
+            //Player.transform.position = currentPos;
+            //VirtualState temporaryState = new VirtualState(state.Boxes, state.Crosses, state.Player, state.move);
+            //temporaryState.Player.transform.position += move;
+            Player.transform.position += move;
+            
+            //Can Be problem with boxes position. 
             //If Box at move position change box position
             if (PlayerController.BoxAtPos(Boxes, Player.transform.position + move))
-                Boxes[PlayerController.iBoxAtPos(Boxes, Player.transform.position + move)].transform.Translate(move);
-
-            newStates.Add(new VirtualState(
-                Boxes,
-                state.Crosses,
-                Player,
-                move)
-            );
+            {
+                //newStates.Add(CreateState(state, move, PlayerController.iBoxAtPos(Boxes, Player.transform.position + move)));
+                //Boxes[PlayerController.iBoxAtPos(Boxes, Player.transform.position + move)].transform.position += move;                
+            }
+            else
+            {
+                //newStates.Add(CreateState(temporaryState, move));
+            }
         }
-
         return newStates;
     }
-    static List<Vector3> possibleMoves(VirtualState state)
+
+    VirtualState CreateState(VirtualState state, Vector3 move)
+    {
+        state.Player.transform.position += move;
+        return (new VirtualState(
+            state.Boxes,
+            state.Crosses,
+            state.Player,
+            move));
+    }
+
+    List<Vector3> possibleMoves(VirtualState state)
     {
         List<Vector3> possibleMoves = new List<Vector3>();
 
@@ -112,10 +155,9 @@ public class AI : MonoBehaviour {
             possibleMoves.Add(new Vector3(0, -1, 0));
         }
 
-        if (possibleMoves.Count ==0) throw new System.ArgumentException("There are not possible moves");
+        if (possibleMoves.Count == 0) throw new System.ArgumentException("There are not possible moves");
         return possibleMoves;
     }
-
 }
 
 public class VirtualState
@@ -123,7 +165,7 @@ public class VirtualState
     public GameObject[] Boxes, Crosses;
     public GameObject Player;
     public float EvaluationValue;
-    Vector3 move;
+    public Vector3 move;
 
     public VirtualState(GameObject[]Boxes, GameObject[] Crosses, GameObject Player, Vector3 move)
     {
@@ -132,7 +174,24 @@ public class VirtualState
         this.Player = Player;
         this.move = move;
 
+       // this.Player.transform.position += move;
         EvaluationValue = EvaluationFuction(Boxes, Crosses, Player);
+    }
+    public VirtualState()
+    {
+        this.EvaluationValue = float.MaxValue;
+    }
+
+    public VirtualState(VirtualState state)
+        :this(state.Boxes, state.Crosses, state.Player, state.move)
+    {
+        EvaluationValue = EvaluationFuction(Boxes, Crosses, Player);
+        /*
+        this.Boxes = state.Boxes;
+        this.Crosses = state.Crosses;
+        this.Player = state.Player;
+        this.EvaluationValue = state.EvaluationValue;
+        this.move = state.move;*/
     }
 
     public static float EvaluationFuction(GameObject[] Boxes, GameObject[] Crosses, GameObject Player)
@@ -144,7 +203,7 @@ public class VirtualState
             value += 8 * CalculateDistanceBeetwenObjects(Boxes[i], Crosses[i]);
             value += CalculateDistanceBeetwenObjects(Player, Boxes[i]);
         }
-        Debug.Log("EvaluationFuction: " + value);
+        //Debug.Log("EvaluationFuction: " + value);
         return value;
 
     }
@@ -158,209 +217,4 @@ public class VirtualState
     }
 }
 
-/*Help classes - Graph don't like me */
-/*
-public class Tree<T>
-{   
-    List<T> Nodes;
-}
-public class Node <T>
-{
-    T Parent;
-
-    VirtualState v;
-}
-*/
-
-
-public class Node<T>
-{
-    // Private member-variables
-    private T data;
-    private NodeList<T> neighbors = null;
-
-    public Node() { }
-    public Node(T data) : this(data, null) { }
-    public Node(T data, NodeList<T> neighbors)
-    {
-        this.data = data;
-        this.neighbors = neighbors;
-    }
-
-    public T Value
-    {
-        get
-        {
-            return data;
-        }
-        set
-        {
-            data = value;
-        }
-    }
-
-    protected NodeList<T> Neighbors
-    {
-        get
-        {
-            return neighbors;
-        }
-        set
-        {
-            neighbors = value;
-        }
-    }
-}
-
-public class NodeList<T> : Collection<Node<T>>
-{
-    public NodeList() : base() { }
-
-    public NodeList(int initialSize)
-    {
-        // Add the specified number of items
-        for (int i = 0; i < initialSize; i++)
-            base.Items.Add(default(Node<T>));
-    }
-
-    public Node<T> FindByValue(T value)
-    {
-        // search the list for the value
-        foreach (Node<T> node in Items)
-            if (node.Value.Equals(value))
-                return node;
-
-        // if we reached here, we didn't find a matching node
-        return null;
-    }
-
-}
-
-public class GraphNode<T> : Node<T>
-{
-    private List<int> costs;
-
-    public GraphNode() : base() { }
-    public GraphNode(T value) : base(value) { }
-    public GraphNode(T value, NodeList<T> neighbors) : base(value, neighbors) { }
-
-    new public NodeList<T> Neighbors
-    {
-        get
-        {
-            if (base.Neighbors == null)
-                base.Neighbors = new NodeList<T>();
-
-            return base.Neighbors;
-        }
-    }
-
-    public List<int> Costs
-    {
-        get
-        {
-            if (costs == null)
-                costs = new List<int>();
-
-            return costs;
-        }
-    }
-}
-
-public class Graph<T> : IEnumerable<T>
-
-{
-    private NodeList<T> nodeSet;
-
-    public Graph() : this(null) { }
-    public Graph(NodeList<T> nodeSet)
-    {
-        if (nodeSet == null)
-            this.nodeSet = new NodeList<T>();
-        else
-            this.nodeSet = nodeSet;
-    }
-
-    public void AddNode(GraphNode<T> node)
-    {
-        // adds a node to the graph
-        nodeSet.Add(node);
-    }
-
-    public void AddNode(T value)
-    {
-        // adds a node to the graph
-        nodeSet.Add(new GraphNode<T>(value));
-    }
-
-    public void AddDirectedEdge(GraphNode<T> from, GraphNode<T> to, int cost)
-    {
-        from.Neighbors.Add(to);
-        from.Costs.Add(cost);
-    }
-
-
-    public void AddUndirectedEdge(GraphNode<T> from, GraphNode<T> to, int cost)
-    {
-        from.Neighbors.Add(to);
-        from.Costs.Add(cost);
-
-        to.Neighbors.Add(from);
-        to.Costs.Add(cost);
-    }
-
-    public bool Contains(T value)
-    {
-        return nodeSet.FindByValue(value) != null;
-    }
-
-    public bool Remove(T value)
-    {
-        // first remove the node from the nodeset
-        GraphNode<T> nodeToRemove = (GraphNode<T>)nodeSet.FindByValue(value);
-        if (nodeToRemove == null)
-            // node wasn't found
-            return false;
-
-        // otherwise, the node was found
-        nodeSet.Remove(nodeToRemove);
-
-        // enumerate through each node in the nodeSet, removing edges to this node
-        foreach (GraphNode<T> gnode in nodeSet)
-        {
-            int index = gnode.Neighbors.IndexOf(nodeToRemove);
-            if (index != -1)
-            {
-                // remove the reference to the node and associated cost
-                gnode.Neighbors.RemoveAt(index);
-                gnode.Costs.RemoveAt(index);
-            }
-        }
-
-        return true;
-    }
-
-    public IEnumerator<T> GetEnumerator()
-    {
-        throw new NotImplementedException();
-    }
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        throw new NotImplementedException();
-    }
-
-    public NodeList<T> Nodes
-    {
-        get
-        {
-            return nodeSet;
-        }
-    }
-
-    public int Count
-    {
-        get { return nodeSet.Count; }
-    }
-}
 

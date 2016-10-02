@@ -40,12 +40,13 @@ public class PlayerController : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.W)) y = 1;
         if (Input.GetKeyDown(KeyCode.S)) y = -1;
 
-
+ 
         //Debug.Log("current pos: , x, z: "+ transform.position + x + "," + y);
         Vector3 targetPosition = (transform.position+ new Vector3(x, y, 0));
         if(MoveIsPossible(transform.position, targetPosition, GameObject.FindGameObjectsWithTag("Box")))
             transform.position = Vector2.MoveTowards(transform.position, targetPosition, 10);   
     }
+
 
 
     public static bool MoveIsPossible(Vector3 currentPos, Vector3 targetPos, GameObject [] Boxes)
