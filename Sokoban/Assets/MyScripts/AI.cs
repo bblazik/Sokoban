@@ -13,7 +13,7 @@ public class AI : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        InitialState = getCurrentState();
+        InvokeRepeating("AIMove", 2.0f, 0.5f);
     }
     void OnTriggerEnter(Collider other)
     {
@@ -23,24 +23,20 @@ public class AI : MonoBehaviour {
     }
     // Update is called once per frame
     void FixedUpdate () {
-
-        //Debug.Log("Size: " + m.Count);
-        //foreach(Vector3 v in m) { AIMove(v); }
-        //InvokeRepeating("AIMove(m[0])", 2, 2);
-        AIMove();
+       // AIMove();
     }
 
     public void AIMove()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
+        //if (Input.GetKeyDown(KeyCode.Space))
+        //{
             InitialState = getCurrentState();
             List<Vector3> m = (GenerateListOfMoves(InitialState, 0));
             Debug.Log(m[0]);
             lastMove = m[0];
             transform.position += m[0];
-            Debug.Log(InitialState.EvaluationValue);
-        }
+//            Debug.Log(InitialState.EvaluationValue);
+        //}
 
     }
 
@@ -86,7 +82,6 @@ public class AI : MonoBehaviour {
 
         if (n == 0)
            moves.Add(best.move);
-        
 
         return best.EvaluationValue;
     }
@@ -112,14 +107,6 @@ public class AI : MonoBehaviour {
             newStates.Add(temporaryState);
         }
         return newStates;
-    }
-    VirtualState CreateState(VirtualState state, Vector3 move)
-    {
-        return (new VirtualState(
-            state.Boxes,
-            state.Crosses,
-            state.Player,
-            move));
     }
     List<Vector3> possibleMoves(VirtualState state)
     {//Tested seems ok. 
@@ -152,8 +139,6 @@ public class VirtualState
         this.Crosses = Crosses;
         this.Player = Player;
         this.move = move;
-
-       // this.Player.transform.position += move;
         EvaluationValue = EvaluationFuction(Boxes, Crosses, Player);
     }
     public VirtualState()
@@ -165,23 +150,11 @@ public class VirtualState
         :this(state.Boxes, state.Crosses, state.Player, state.move)
     {
         EvaluationValue = EvaluationFuction(Boxes, Crosses, Player);
-        /*
-        this.Boxes = state.Boxes;
-        this.Crosses = state.Crosses;
-        this.Player = state.Player;
-        this.EvaluationValue = state.EvaluationValue;
-        this.move = state.move;*/
     }
     public VirtualState(VirtualState state, float ev)
     : this(state.Boxes, state.Crosses, state.Player, state.move)
     {
         this.EvaluationValue = ev;
-        /*
-        this.Boxes = state.Boxes;
-        this.Crosses = state.Crosses;
-        this.Player = state.Player;
-        this.EvaluationValue = state.EvaluationValue;
-        this.move = state.move;*/
     }
 
     public static float EvaluationFuction(Vector3[] Boxes, Vector3[] Crosses, Vector3 Player)
@@ -191,7 +164,9 @@ public class VirtualState
         for (int i = 0; i < Boxes.Length; i++)
         {
             value += 16 * CalculateDistanceBeetwenObjects(Boxes[i], Crosses[i]);
-            value += 4 * CalculateDistanceBeetwenObjects(Player, Boxes[i]);
+            if (CalculateDistanceBeetwenObjects(Boxes[i], Crosses[i]) > 0)
+                value += 4 * CalculateDistanceBeetwenObjects(Player, Boxes[i]);
+
         }
         //Debug.Log("EvaluationFuction: " + value);
         return value;

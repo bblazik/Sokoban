@@ -11,6 +11,7 @@ public class GenerateGrid : MonoBehaviour {
     public GameObject BoxAsset;
     public GameObject CrossAsset;
     public GameObject PlayerAsset;
+    public Cataloges Catalog;
 
     public static int AreaSize = 10 ;
     public int NumberOfBoxes = 3;
@@ -18,7 +19,42 @@ public class GenerateGrid : MonoBehaviour {
     public static Tile [,] TableOfTiles;
     public static GameObject Player;
 
+    public class Cataloges
+    {
+        public static List<GameObject> ListOfCataloges;
 
+        public List<GameObject> GenerateCataloges(params string[] t)
+        {
+            if (ListOfCataloges == null || ListOfCataloges[0] == null)
+                ListOfCataloges = new List<GameObject>();
+
+            foreach (string name in t)
+            {
+                GameObject ob = new GameObject();
+                ob.name = name;
+                ListOfCataloges.Add(ob);
+            }
+            return ListOfCataloges;
+        }
+
+        public bool AddToCatalog(string s, GameObject GameObjectToAdd)
+        {
+
+            if (ListOfCataloges != null && ListOfCataloges[0] != null)
+                foreach (GameObject Catalog in ListOfCataloges)
+                {
+                    if (Catalog.name == s)
+                    {
+                        GameObjectToAdd.transform.parent = Catalog.transform;
+                        return true;
+                    }
+                }
+            //if there is not catalog for that name 
+            GenerateCataloges(s);
+            GameObjectToAdd.transform.parent = ListOfCataloges[ListOfCataloges.Count - 1].transform;
+            return false;
+        }
+    };
     public class Tile : MonoBehaviour
     {
         int x, y;
@@ -64,20 +100,30 @@ public class GenerateGrid : MonoBehaviour {
 
     };
 
+    void Awake()
+    {
+       // Cataloges.ListOfCataloges = Cataloges.GenerateCataloges("Boxes", "Tiles", "Crosses");
+       
+    }
+
     void Start () {
-
+        Catalog = new Cataloges();
+        
         TableOfTiles = new Tile[AreaSize, AreaSize];
-
-        Cataloges.ListOfCataloges = Cataloges.GenerateCataloges("Boxes", "Tiles", "Crosses");
         GenerateTiles();
         GenerateBoxesAndCrosses();
         GeneratePlayer();
-	}
+        
+
+    }
 	
 
 	void Update () {
-        if(GameIsOver())
+        if (GameIsOver())
+        {
+            
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
     }
 
     void GenerateTiles()
@@ -86,7 +132,7 @@ public class GenerateGrid : MonoBehaviour {
             for (int j = 0; j < AreaSize; j++)
             {
                 Tile field = new Tile(i, j, FieldAsset);
-                Cataloges.AddToCatalog("Tiles", field.Asset);
+                Catalog.AddToCatalog("Tiles", field.Asset);
                 TableOfTiles[i, j] = field;
             }
     }
@@ -100,12 +146,12 @@ public class GenerateGrid : MonoBehaviour {
 
             GameObject Box = Instantiate(BoxAsset, Tile.RandomField(), Quaternion.identity) as GameObject;
             Box.tag = "Box";
-            Cataloges.AddToCatalog("Boxes", Box);            
+            Catalog.AddToCatalog("Boxes", Box);            
             Box.GetComponent<Renderer>().material.color = TableOfColor[IndexOfColor];
 
             GameObject Cross = Instantiate(CrossAsset, Tile.RandomField(), Quaternion.Euler(90,0,0)) as GameObject;
             Cross.tag = "Cross";
-            Cataloges.AddToCatalog("Crosses", Cross);
+            Catalog.AddToCatalog("Crosses", Cross);
             Cross.GetComponent<Renderer>().material.color = TableOfColor[IndexOfColor];
             TableOfColor.RemoveAt(IndexOfColor);
         }
@@ -127,42 +173,6 @@ public class GenerateGrid : MonoBehaviour {
         return true;
     }
 
-    public class Cataloges
-    {
-        public static List<GameObject> ListOfCataloges;
-        
-        public static List<GameObject> GenerateCataloges(params string[] t)
-        {
-            if(ListOfCataloges == null)
-                ListOfCataloges = new List<GameObject>();
 
-            foreach (string name in t)
-            {
-                GameObject ob = new GameObject();
-                ob.name = name;
-                ListOfCataloges.Add(ob);
-            }
-            return ListOfCataloges;
-        }
-
-        public static bool AddToCatalog(string s, GameObject GameObjectToAdd)
-        {
-            if(ListOfCataloges.Count > 0)
-            foreach(GameObject Catalog in ListOfCataloges)
-            {
-                if (Catalog.name == s)
-                {
-                    GameObjectToAdd.transform.parent = Catalog.transform;
-                    return true;
-                }
-            }
-            //if there is not catalog for that name 
-            GenerateCataloges(s);
-            GameObjectToAdd.transform.parent = ListOfCataloges[ListOfCataloges.Count-1].transform;
-            return false;
-        }
-    };
-
-    
 
 }
