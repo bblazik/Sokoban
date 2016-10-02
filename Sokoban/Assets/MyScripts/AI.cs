@@ -8,15 +8,21 @@ using UnityEngine.Assertions;
 public class AI : MonoBehaviour {
 
     VirtualState InitialState;
-    int limit =3;
+    Vector3 lastMove;
+    int limit =7;
 
     // Use this for initialization
     void Start () {
         InitialState = getCurrentState();
     }
-	
-	// Update is called once per frame
-	void Update () {
+    void OnTriggerEnter(Collider other)
+    {
+        //Debug.Log("Colider pos: " + other.transform.position + "x,y" + x + "," + y);
+        Debug.Log("Move: " + lastMove);
+        other.transform.Translate(lastMove);
+    }
+    // Update is called once per frame
+    void FixedUpdate () {
 
         //Debug.Log("Size: " + m.Count);
         //foreach(Vector3 v in m) { AIMove(v); }
@@ -28,10 +34,12 @@ public class AI : MonoBehaviour {
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
+            InitialState = getCurrentState();
             List<Vector3> m = (GenerateListOfMoves(InitialState, 0));
             Debug.Log(m[0]);
+            lastMove = m[0];
             transform.position += m[0];
-            InitialState = getCurrentState();
+            Debug.Log(InitialState.EvaluationValue);
         }
 
     }
@@ -44,7 +52,7 @@ public class AI : MonoBehaviour {
             GameObject.FindGameObjectWithTag("Player").transform.position,
             new Vector3(0, 0, 0)
         );
-        Debug.Log("Initial position: " + GameObject.FindGameObjectWithTag("Player").transform.position);
+        //Debug.Log("Initial position: " + GameObject.FindGameObjectWithTag("Player").transform.position);
 
         return CurrentState;
     }
@@ -67,16 +75,18 @@ public class AI : MonoBehaviour {
             if (n + 1 < limit)
             {
                 v.EvaluationValue += CreateSearchTree(v, n + 1, ref moves);
+                
             }
             if (v.EvaluationValue < best.EvaluationValue)
             {
-                best = v;
+                best = new VirtualState(v, v.EvaluationValue);
             }
         }
         //Debug.Log("N: " + n + " , " + best.EvaluationValue + ", " + best.move);
 
         if (n == 0)
-            moves.Add(best.move);
+           moves.Add(best.move);
+        
 
         return best.EvaluationValue;
     }
@@ -84,7 +94,7 @@ public class AI : MonoBehaviour {
     {
         List<Vector3> moves = new List<Vector3>();
         CreateSearchTree(state, n, ref moves);
-        Debug.Log(moves[0]);
+        //Debug.Log(moves[0]);
         return moves;
     }
     List<VirtualState> GeneratePossibleStates(VirtualState state)
@@ -93,13 +103,13 @@ public class AI : MonoBehaviour {
         List<Vector3> listOfPossibleMoves = possibleMoves(state);
         foreach (Vector3 move in listOfPossibleMoves)
         {
-            VirtualState temporaryState = new VirtualState(state.Boxes, state.Crosses, state.Player, state.move);
+            VirtualState temporaryState = new VirtualState(state.Boxes, state.Crosses, state.Player, move);
             temporaryState.Player += move;
-            if (PlayerController.BoxAtPos(temporaryState.Boxes, temporaryState.Player + move))
+            if (PlayerController.BoxAtPos(temporaryState.Boxes, temporaryState.Player))
             {                
-               temporaryState.Boxes[PlayerController.iBoxAtPos(temporaryState.Boxes, temporaryState.Player + move)] += move;                
+               temporaryState.Boxes[PlayerController.iBoxAtPos(temporaryState.Boxes, temporaryState.Player)] += move;                
             }
-            newStates.Add(CreateState(temporaryState, move));
+            newStates.Add(temporaryState);
         }
         return newStates;
     }
@@ -123,6 +133,7 @@ public class AI : MonoBehaviour {
             }
         }
         if (possibleMoves.Count == 0) throw new System.ArgumentException("There are not possible moves");
+        if (possibleMoves.Count < 4) Debug.Log("Less than 4 possible moves");
         return returnMoves;
     }
 }
@@ -161,6 +172,17 @@ public class VirtualState
         this.EvaluationValue = state.EvaluationValue;
         this.move = state.move;*/
     }
+    public VirtualState(VirtualState state, float ev)
+    : this(state.Boxes, state.Crosses, state.Player, state.move)
+    {
+        this.EvaluationValue = ev;
+        /*
+        this.Boxes = state.Boxes;
+        this.Crosses = state.Crosses;
+        this.Player = state.Player;
+        this.EvaluationValue = state.EvaluationValue;
+        this.move = state.move;*/
+    }
 
     public static float EvaluationFuction(Vector3[] Boxes, Vector3[] Crosses, Vector3 Player)
     {
@@ -168,8 +190,8 @@ public class VirtualState
         float value = 0;
         for (int i = 0; i < Boxes.Length; i++)
         {
-            value += 8 * CalculateDistanceBeetwenObjects(Boxes[i], Crosses[i]);
-            value += CalculateDistanceBeetwenObjects(Player, Boxes[i]);
+            value += 16 * CalculateDistanceBeetwenObjects(Boxes[i], Crosses[i]);
+            value += 4 * CalculateDistanceBeetwenObjects(Player, Boxes[i]);
         }
         //Debug.Log("EvaluationFuction: " + value);
         return value;

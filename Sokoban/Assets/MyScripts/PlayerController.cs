@@ -14,14 +14,14 @@ public class PlayerController : MonoBehaviour {
     // Use this for initialization
     void Start () {
         //AreaSize = GenerateGrid.AreaSize;
-        Debug.Log("AreaSize: " + AreaSize);
+        //Debug.Log("AreaSize: " + AreaSize);
     }
-
+    /*
     void OnTriggerEnter(Collider other)
     {
         //Debug.Log("Colider pos: " + other.transform.position + "x,y" + x + "," + y);
         other.transform.Translate(new Vector3(x, y, 0));
-    }
+    }*/
 
     // Update is called once per frame
     void FixedUpdate () {
