@@ -13,7 +13,7 @@ public class AI : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        InvokeRepeating("AIMove", 2.0f, 0.5f);
+        InvokeRepeating("AIMove", 1.0f, 0.2f);
     }
     void OnTriggerEnter(Collider other)
     {
@@ -167,6 +167,10 @@ public class VirtualState
             if (CalculateDistanceBeetwenObjects(Boxes[i], Crosses[i]) > 0)
                 value += 4 * CalculateDistanceBeetwenObjects(Player, Boxes[i]);
 
+        }
+        foreach(Vector3 v in Boxes)
+        {
+            if (v.x == GenerateGrid.AreaSize - 1 || v.y == GenerateGrid.AreaSize - 1 || v.x == 0 || v.y == 0) value += 100;
         }
         //Debug.Log("EvaluationFuction: " + value);
         return value;
