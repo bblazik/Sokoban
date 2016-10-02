@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System;
+using UnityEngine.Assertions;
 
 public class AI : MonoBehaviour {
 
@@ -11,7 +12,7 @@ public class AI : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        InitialState = getCurrentState();       
+        InitialState = getCurrentState();
     }
 	
 	// Update is called once per frame
@@ -20,142 +21,110 @@ public class AI : MonoBehaviour {
         //Debug.Log("Size: " + m.Count);
         //foreach(Vector3 v in m) { AIMove(v); }
         //InvokeRepeating("AIMove(m[0])", 2, 2);
-        //AIMove();
+        AIMove();
     }
 
-    //public void AIMove()
-    //{
-    //    if (Input.GetKeyDown(KeyCode.Space))
-    //    {
-    //        InitialState = getCurrentState();
+    public void AIMove()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            List<Vector3> m = (GenerateListOfMoves(InitialState, 0));
+            Debug.Log(m[0]);
+            transform.position += m[0];
+            InitialState = getCurrentState();
+        }
 
-    //        List<Vector3> m = (GenerateListOfMoves(InitialState, 0));
-    //        Debug.Log(m[0]);
-    //        transform.position += m[0];
-    //        InitialState = getCurrentState();
-    //    }
-            
-    //}
-    //VirtualState getCurrentState()
-    //{
-    //    VirtualState CurrentState = new VirtualState(
-    //        GameObject.FindGameObjectsWithTag("Box"),
-    //        GameObject.FindGameObjectsWithTag("Cross"),
-    //        GameObject.FindGameObjectWithTag("Player"),
-    //        new Vector3(0, 0, 0)
-    //    );
-    //    Debug.Log("Initial position: " + GameObject.FindGameObjectWithTag("Player").transform.position);
+    }
 
-    //    return CurrentState;
-    //}
-    //float CreateSearchTree(VirtualState state, int n, ref List<Vector3> moves)
-    //{
-    //    List<VirtualState> PossibleStates = GeneratePossibleStates(state);
-    //    VirtualState best = new VirtualState();
-    //    foreach (VirtualState v in PossibleStates) {
-    //        if (n + 1 < limit)
-    //        {
-    //            v.EvaluationValue += CreateSearchTree(v, n + 1, ref moves);
-    //        }
-    //        if (v.EvaluationValue < best.EvaluationValue)
-    //        {
-    //            best = v;
-    //        }
-    //    }
-    //    //Debug.Log("N: " + n + " , " + best.EvaluationValue + ", " + best.move);
+    VirtualState getCurrentState()
+    {
+        VirtualState CurrentState = new VirtualState(
+            CastFromGameObjectListToPositionVector(GameObject.FindGameObjectsWithTag("Box")),
+            CastFromGameObjectListToPositionVector(GameObject.FindGameObjectsWithTag("Cross")),
+            GameObject.FindGameObjectWithTag("Player").transform.position,
+            new Vector3(0, 0, 0)
+        );
+        Debug.Log("Initial position: " + GameObject.FindGameObjectWithTag("Player").transform.position);
 
-    //    if( n ==0 )
-    //        moves.Add(best.move);
+        return CurrentState;
+    }
+    public static Vector3[] CastFromGameObjectListToPositionVector(GameObject[] objects)
+    {   //Tested, always create new Vector3.
+        List<Vector3> newList = new List<Vector3>();
+        foreach(GameObject ob in objects)
+        {
+            newList.Add(ob.transform.position);
+        }
+        return newList.ToArray();
+    }
 
-    //    return best.EvaluationValue; 
-    //}
-    //List<Vector3> GenerateListOfMoves(VirtualState state, int n)
-    //{
-    //    List<Vector3> moves = new List<Vector3>();
-    //    CreateSearchTree(state, n, ref moves);
-    //    Debug.Log(moves[0]);
-    //    return moves;
-    //}    
-    //List<VirtualState> GeneratePossibleStates(VirtualState state) 
-    //{
-    //    List<VirtualState> newStates = new List<VirtualState>();
-    //    //Possible movement of player, and possible change of box pos
-    //    GameObject Player = Instantiate(state.Player, state.Player.transform.position, Quaternion.identity) as GameObject;
-    //    GameObject[] Boxes = state.Boxes;
-    //    Vector3 currentPos = Player.transform.position;
-        
-    //    List<Vector3> listOfPossibleMoves = possibleMoves(state);
-    //    foreach (Vector3 move in listOfPossibleMoves) {
-    //        Player.transform.position = currentPos;
-    //        //VirtualState temporaryState = new VirtualState(state.Boxes, state.Crosses, state.Player, state.move);
-    //        //temporaryState.Player.transform.position += move;
-    //        Player.transform.position += move;
-            
-    //        //Can Be problem with boxes position. 
-    //        //If Box at move position change box position
-    //        if (PlayerController.BoxAtPos(Boxes, Player.transform.position + move))
-    //        {
-    //            //newStates.Add(CreateState(state, move, PlayerController.iBoxAtPos(Boxes, Player.transform.position + move)));
-    //            //Boxes[PlayerController.iBoxAtPos(Boxes, Player.transform.position + move)].transform.position += move;                
-    //        }
-    //        else
-    //        {
-    //            //newStates.Add(CreateState(temporaryState, move));
-    //        }
-    //    }
-    //    return newStates;
-    //}
-    //VirtualState CreateState(VirtualState state, Vector3 move)
-    //{
-    //    state.Player.transform.position += move;
-    //    return (new VirtualState(
-    //        state.Boxes,
-    //        state.Crosses,
-    //        state.Player,
-    //        move));
-    //}
-    //List<Vector3> possibleMoves(VirtualState state)
-    //{
-    //    List<Vector3> possibleMoves = new List<Vector3>();
+    float CreateSearchTree(VirtualState state, int n, ref List<Vector3> moves)
+    {
+        List<VirtualState> PossibleStates = GeneratePossibleStates(state);
+        VirtualState best = new VirtualState();
+        foreach (VirtualState v in PossibleStates)
+        {
+            if (n + 1 < limit)
+            {
+                v.EvaluationValue += CreateSearchTree(v, n + 1, ref moves);
+            }
+            if (v.EvaluationValue < best.EvaluationValue)
+            {
+                best = v;
+            }
+        }
+        //Debug.Log("N: " + n + " , " + best.EvaluationValue + ", " + best.move);
 
-    //    Vector3 v = state.Player.transform.position + new Vector3(1, 0, 0);
-    //    if (PlayerController.MoveIsPossible(
-    //        state.Player.transform.position,
-    //        v,
-    //        state.Boxes))
-    //    {
-    //        possibleMoves.Add(new Vector3(1, 0, 0));
-    //    }
+        if (n == 0)
+            moves.Add(best.move);
 
-
-    //    v = state.Player.transform.position + new Vector3(-1, 0, 0);
-    //    if (PlayerController.MoveIsPossible(
-    //        state.Player.transform.position,
-    //        v,
-    //        state.Boxes))
-    //    {
-    //        possibleMoves.Add(new Vector3(-1, 0, 0));
-    //    }
-    //    v = state.Player.transform.position + new Vector3(0, 1, 0);
-    //    if (PlayerController.MoveIsPossible(
-    //        state.Player.transform.position,
-    //        v,
-    //        state.Boxes))
-    //    {
-    //        possibleMoves.Add(new Vector3(0, 1, 0));
-    //    }
-    //    v = state.Player.transform.position + new Vector3(0, -1, 0);
-    //    if (PlayerController.MoveIsPossible(
-    //        state.Player.transform.position,
-    //        v,
-    //        state.Boxes))
-    //    {
-    //        possibleMoves.Add(new Vector3(0, -1, 0));
-    //    }
-
-    //    if (possibleMoves.Count == 0) throw new System.ArgumentException("There are not possible moves");
-    //    return possibleMoves;
-    //}
+        return best.EvaluationValue;
+    }
+    List<Vector3> GenerateListOfMoves(VirtualState state, int n)
+    {
+        List<Vector3> moves = new List<Vector3>();
+        CreateSearchTree(state, n, ref moves);
+        Debug.Log(moves[0]);
+        return moves;
+    }
+    List<VirtualState> GeneratePossibleStates(VirtualState state)
+    {//Tested ok.
+        List<VirtualState> newStates = new List<VirtualState>();
+        List<Vector3> listOfPossibleMoves = possibleMoves(state);
+        foreach (Vector3 move in listOfPossibleMoves)
+        {
+            VirtualState temporaryState = new VirtualState(state.Boxes, state.Crosses, state.Player, state.move);
+            temporaryState.Player += move;
+            if (PlayerController.BoxAtPos(temporaryState.Boxes, temporaryState.Player + move))
+            {                
+               temporaryState.Boxes[PlayerController.iBoxAtPos(temporaryState.Boxes, temporaryState.Player + move)] += move;                
+            }
+            newStates.Add(CreateState(temporaryState, move));
+        }
+        return newStates;
+    }
+    VirtualState CreateState(VirtualState state, Vector3 move)
+    {
+        return (new VirtualState(
+            state.Boxes,
+            state.Crosses,
+            state.Player,
+            move));
+    }
+    List<Vector3> possibleMoves(VirtualState state)
+    {//Tested seems ok. 
+        List<Vector3> possibleMoves = new List<Vector3>() { new Vector3(1,0,0), new Vector3(-1, 0, 0), new Vector3(0, -1, 0), new Vector3(0, 1, 0) };
+        List<Vector3> returnMoves = new List<Vector3>();
+        foreach(Vector3 move in possibleMoves)
+        {
+            if(PlayerController.MoveIsPossible(state.Player, state.Player + move, state.Boxes))
+            {
+                returnMoves.Add(move);
+            }
+        }
+        if (possibleMoves.Count == 0) throw new System.ArgumentException("There are not possible moves");
+        return returnMoves;
+    }
 }
 
 public class VirtualState
@@ -167,7 +136,8 @@ public class VirtualState
 
     public VirtualState(Vector3[]Boxes, Vector3[] Crosses, Vector3 Player, Vector3 move)
     {
-        this.Boxes = Boxes;
+        this.Boxes = new Vector3[Boxes.Length];
+        System.Array.Copy (Boxes, this.Boxes , Boxes.Length);
         this.Crosses = Crosses;
         this.Player = Player;
         this.move = move;

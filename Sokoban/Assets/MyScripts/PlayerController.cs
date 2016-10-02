@@ -43,13 +43,13 @@ public class PlayerController : MonoBehaviour {
  
         //Debug.Log("current pos: , x, z: "+ transform.position + x + "," + y);
         Vector3 targetPosition = (transform.position+ new Vector3(x, y, 0));
-        if(MoveIsPossible(transform.position, targetPosition, GameObject.FindGameObjectsWithTag("Box")))
+        if(MoveIsPossible(transform.position, targetPosition, AI.CastFromGameObjectListToPositionVector(GameObject.FindGameObjectsWithTag("Box"))))
             transform.position = Vector2.MoveTowards(transform.position, targetPosition, 10);   
     }
 
 
 
-    public static bool MoveIsPossible(Vector3 currentPos, Vector3 targetPos, GameObject [] Boxes)
+    public static bool MoveIsPossible(Vector3 currentPos, Vector3 targetPos, Vector3 [] Boxes)
     {
         //PlayerOutOfBound
         if (ObjectOutOBound(targetPos)) return false;
@@ -68,20 +68,20 @@ public class PlayerController : MonoBehaviour {
 
         return true;
     }
-    public static bool BoxAtPos(GameObject [] Boxes, Vector3 posToCheck)
+    public static bool BoxAtPos(Vector3 [] Boxes, Vector3 posToCheck)
     {
-        foreach(GameObject b in Boxes)
+        foreach(Vector3 b in Boxes)
         {
-            if (b.transform.position == posToCheck) return true;
+            if (b == posToCheck) return true;
         }
         return false; 
     }
 
-    public static int iBoxAtPos(GameObject[] Boxes, Vector3 posToCheck)
+    public static int iBoxAtPos(Vector3[] Boxes, Vector3 posToCheck)
     {
         for(int i = 0; i < Boxes.Length; i++)
         {
-            if (Boxes[i].transform.position == posToCheck) return i;
+            if (Boxes[i] == posToCheck) return i;
         }
         return -1;
     }
