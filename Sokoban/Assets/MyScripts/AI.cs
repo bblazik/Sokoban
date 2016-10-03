@@ -9,11 +9,13 @@ public class AI : MonoBehaviour {
 
     VirtualState InitialState;
     Vector3 lastMove;
-    int limit =7;
+    public int limit =7;
+    List<Vector3> lastMoves;
 
     // Use this for initialization
     void Start () {
-        InvokeRepeating("AIMove", 1.0f, 0.2f);
+        lastMoves = new List<Vector3>();
+        InvokeRepeating("AIMove", 1.0f, 0.1f);
     }
     void OnTriggerEnter(Collider other)
     {
@@ -28,18 +30,39 @@ public class AI : MonoBehaviour {
 
     public void AIMove()
     {
-        //if (Input.GetKeyDown(KeyCode.Space))
-        //{
-            InitialState = getCurrentState();
-            List<Vector3> m = (GenerateListOfMoves(InitialState, 0));
-            Debug.Log(m[0]);
-            lastMove = m[0];
-            transform.position += m[0];
-//            Debug.Log(InitialState.EvaluationValue);
-        //}
+        
+
+        InitialState = getCurrentState();
+        List<Vector3> m = (GenerateListOfMoves(InitialState, 0));
+        lastMove = m[0];
+
+        lastMoves.Add(lastMove);
+        if(lastMoves.Count > 10)
+        {
+            lastMoves.RemoveAt(0);
+        }
+        if (lastMoves.Count == 10 && Glitch(lastMoves))
+        {
+            if (limit <9)limit++;
+            lastMoves = new List<Vector3>();
+            Debug.Log("Glitch detected limit rised");
+        }
+        transform.position += m[0];
+
 
     }
+    bool Glitch(List<Vector3> v)
+    {
+        for(int i = 0; i < (v.Count/2); i++)
+        {
+            if (v[i] != v[i + 2]) return false;
+        }
+        return true;
+    }
+    void GlitchHandling()
+    {
 
+    }
     VirtualState getCurrentState()
     {
         VirtualState CurrentState = new VirtualState(
@@ -163,9 +186,9 @@ public class VirtualState
         float value = 0;
         for (int i = 0; i < Boxes.Length; i++)
         {
-            value += 16 * CalculateDistanceBeetwenObjects(Boxes[i], Crosses[i]);
+            value += 35 * CalculateDistanceBeetwenObjects(Boxes[i], Crosses[i]);
             if (CalculateDistanceBeetwenObjects(Boxes[i], Crosses[i]) > 0)
-                value += 4 * CalculateDistanceBeetwenObjects(Player, Boxes[i]);
+                value += 2 * CalculateDistanceBeetwenObjects(Player, Boxes[i]);
 
         }
         foreach(Vector3 v in Boxes)

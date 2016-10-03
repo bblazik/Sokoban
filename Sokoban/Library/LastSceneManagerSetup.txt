@@ -2,3 +2,6 @@ sceneSetups:
 - path: Assets/MyScenes/Main.unity
   isLoaded: 1
   isActive: 1
+- path: Assets/MyScenes/Main.unity
+  isLoaded: 0
+  isActive: 0
