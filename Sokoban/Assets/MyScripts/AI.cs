@@ -10,12 +10,14 @@ public class AI : MonoBehaviour {
     VirtualState InitialState;
     Vector3 lastMove;
     public int limit =7;
+    public float speed = 0.2f;
     List<Vector3> lastMoves;
 
     // Use this for initialization
     void Start () {
+
         lastMoves = new List<Vector3>();
-        InvokeRepeating("AIMove", 1.0f, 0.1f);
+        InvokeRepeating("AIMove", 1.0f, speed);
     }
     void OnTriggerEnter(Collider other)
     {
@@ -68,6 +70,7 @@ public class AI : MonoBehaviour {
         VirtualState CurrentState = new VirtualState(
             CastFromGameObjectListToPositionVector(GameObject.FindGameObjectsWithTag("Box")),
             CastFromGameObjectListToPositionVector(GameObject.FindGameObjectsWithTag("Cross")),
+            CastFromGameObjectListToPositionVector(GameObject.FindGameObjectsWithTag("Wall")),
             GameObject.FindGameObjectWithTag("Player").transform.position,
             new Vector3(0, 0, 0)
         );
@@ -121,7 +124,7 @@ public class AI : MonoBehaviour {
         List<Vector3> listOfPossibleMoves = possibleMoves(state);
         foreach (Vector3 move in listOfPossibleMoves)
         {
-            VirtualState temporaryState = new VirtualState(state.Boxes, state.Crosses, state.Player, move);
+            VirtualState temporaryState = new VirtualState(state.Boxes, state.Crosses,state.Walls, state.Player, move);
             temporaryState.Player += move;
             if (PlayerController.BoxAtPos(temporaryState.Boxes, temporaryState.Player))
             {                
@@ -150,16 +153,18 @@ public class AI : MonoBehaviour {
 
 public class VirtualState
 {
-    public Vector3[] Boxes, Crosses;
+    public Vector3[] Boxes, Crosses, Walls;
     public Vector3 Player;
     public float EvaluationValue;
     public Vector3 move;
+    
 
-    public VirtualState(Vector3[]Boxes, Vector3[] Crosses, Vector3 Player, Vector3 move)
+    public VirtualState(Vector3[]Boxes, Vector3[] Crosses, Vector3[] Walls, Vector3 Player, Vector3 move)
     {
         this.Boxes = new Vector3[Boxes.Length];
         System.Array.Copy (Boxes, this.Boxes , Boxes.Length);
         this.Crosses = Crosses;
+        this.Walls = Walls;
         this.Player = Player;
         this.move = move;
         EvaluationValue = EvaluationFuction(Boxes, Crosses, Player);
@@ -170,12 +175,12 @@ public class VirtualState
     }
 
     public VirtualState(VirtualState state)
-        :this(state.Boxes, state.Crosses, state.Player, state.move)
+        :this(state.Boxes, state.Crosses, state.Walls, state.Player, state.move)
     {
         EvaluationValue = EvaluationFuction(Boxes, Crosses, Player);
     }
     public VirtualState(VirtualState state, float ev)
-    : this(state.Boxes, state.Crosses, state.Player, state.move)
+    : this(state.Boxes, state.Crosses, state.Walls, state.Player, state.move)
     {
         this.EvaluationValue = ev;
     }

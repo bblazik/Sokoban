@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class PlayerController : MonoBehaviour {
     int x = 0;
@@ -16,12 +17,12 @@ public class PlayerController : MonoBehaviour {
         //AreaSize = GenerateGrid.AreaSize;
         //Debug.Log("AreaSize: " + AreaSize);
     }
-    /*
+    
     void OnTriggerEnter(Collider other)
     {
         //Debug.Log("Colider pos: " + other.transform.position + "x,y" + x + "," + y);
         other.transform.Translate(new Vector3(x, y, 0));
-    }*/
+    }
 
     // Update is called once per frame
     void FixedUpdate () {
@@ -56,9 +57,17 @@ public class PlayerController : MonoBehaviour {
         
         //Box: outofbound, secondbox.
         Vector3 positionBehindBox = targetPos + (targetPos - currentPos);
+        /*
         if ((BoxAtPos(Boxes, targetPos) && BoxAtPos(Boxes, positionBehindBox))
-            || BoxAtPos(Boxes, targetPos) && ObjectOutOBound(positionBehindBox)) return false;
-            
+            || (BoxAtPos(Boxes, targetPos) && ObjectOutOBound(positionBehindBox))
+            || (BoxAtPos(Boxes, targetPos) && WallOnPos(positionBehindBox))) return false;
+            */
+        if (BoxAtPos(Boxes, targetPos) 
+            && (BoxAtPos(Boxes, positionBehindBox) || ObjectOutOBound(positionBehindBox) || WallOnPos(positionBehindBox)))
+                return false;
+        if (WallOnPos(targetPos)) return false;
+
+
         return true;
     }
     public static bool ObjectOutOBound(Vector3 targetPos)
@@ -75,6 +84,16 @@ public class PlayerController : MonoBehaviour {
             if (b == posToCheck) return true;
         }
         return false; 
+    }
+    public static bool WallOnPos(Vector3 targetPos)
+    {
+        Vector3[] wallList = AI.CastFromGameObjectListToPositionVector(GameObject.FindGameObjectsWithTag("Wall"));
+
+        foreach(Vector3 v in wallList)
+        {
+            if (v == targetPos) return true;
+        }
+        return false;
     }
 
     public static int iBoxAtPos(Vector3[] Boxes, Vector3 posToCheck)

@@ -10,10 +10,12 @@ public class GenerateGrid : MonoBehaviour {
     public GameObject BoxAsset;
     public GameObject CrossAsset;
     public GameObject PlayerAsset;
+    public GameObject WallAsset;
     public Cataloges Catalog;
 
     public static int AreaSize = 10 ;
     public int NumberOfBoxes = 3;
+    public int NumberOfWalls = 5;
     public List<Color> TableOfColor = new List<Color> { Color.blue, Color.red, Color.yellow, Color.green };
     public static Tile [,] TableOfTiles;
     public static GameObject Player;
@@ -112,15 +114,13 @@ public class GenerateGrid : MonoBehaviour {
         GenerateTiles();
         GenerateBoxesAndCrosses();
         GeneratePlayer();
-        
+        GenerateWalls();
 
     }
-	
 
 	void Update () {
         if (GameIsOver())
         {
-            
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
     }
@@ -140,7 +140,6 @@ public class GenerateGrid : MonoBehaviour {
     {
         for(int i = 0; i< NumberOfBoxes; i++)
         {
-
             int IndexOfColor = Random.Range(0, TableOfColor.Count);
 
             GameObject Box = Instantiate(BoxAsset, Tile.RandomField(), Quaternion.identity) as GameObject;
@@ -153,6 +152,16 @@ public class GenerateGrid : MonoBehaviour {
             Catalog.AddToCatalog("Crosses", Cross);
             Cross.GetComponent<Renderer>().material.color = TableOfColor[IndexOfColor];
             TableOfColor.RemoveAt(IndexOfColor);
+        }
+    }
+
+    void GenerateWalls()
+    {
+        for (int i = 0; i < NumberOfWalls; i++)
+        {
+            GameObject Wall = Instantiate(WallAsset, Tile.RandomField(), Quaternion.identity) as GameObject;
+            Wall.tag = "Wall";
+            Catalog.AddToCatalog("Walls", Wall);
         }
     }
 
