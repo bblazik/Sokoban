@@ -27,10 +27,8 @@ public class PlayerController : MonoBehaviour {
     // Update is called once per frame
     void FixedUpdate () {
         Movement();
-        
         //Invoke("Movement", 2);
     }
-
 
     void Movement()
     {
@@ -55,18 +53,13 @@ public class PlayerController : MonoBehaviour {
         //PlayerOutOfBound
         if (ObjectOutOBound(targetPos)) return false;
         
-        //Box: outofbound, secondbox.
+        //Box: outofbound or secondbox on target position.
         Vector3 positionBehindBox = targetPos + (targetPos - currentPos);
-        /*
-        if ((BoxAtPos(Boxes, targetPos) && BoxAtPos(Boxes, positionBehindBox))
-            || (BoxAtPos(Boxes, targetPos) && ObjectOutOBound(positionBehindBox))
-            || (BoxAtPos(Boxes, targetPos) && WallOnPos(positionBehindBox))) return false;
-            */
         if (BoxAtPos(Boxes, targetPos) 
             && (BoxAtPos(Boxes, positionBehindBox) || ObjectOutOBound(positionBehindBox) || WallOnPos(positionBehindBox)))
                 return false;
-        if (WallOnPos(targetPos)) return false;
 
+        if (WallOnPos(targetPos)) return false;
 
         return true;
     }
