@@ -10,7 +10,7 @@ public class AI : MonoBehaviour {
 
     VirtualState InitialState;
     Vector3 lastMove;
-    public int TreeDeeplimit =2;
+    public int TreeDeeplimit =6;
     public float speed = 0.2f;
     List<Vector3> lastMoves;
 
@@ -49,7 +49,7 @@ public class AI : MonoBehaviour {
         }
         if (lastMoves.Count == 10 && Glitch(lastMoves))
         {
-            if (TreeDeeplimit <9)TreeDeeplimit++;
+            if (TreeDeeplimit <8)TreeDeeplimit++;
             lastMoves.RemoveRange(0,3);
             Debug.Log("Glitch detected TreeDeeplimit rised");
         }
@@ -62,8 +62,6 @@ public class AI : MonoBehaviour {
                 }
         }
         transform.position += m[0];
-
-
     }
 
     bool Glitch(List<Vector3> v)
